@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "73078652219",
+    "project_id": "myfirebaseapp-b75dd",
+    "storage_bucket": "myfirebaseapp-b75dd.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:73078652219:android:e9e0206d6eefe0751dcb1e",
+        "android_client_info": {
+          "package_name": "com.example.firebase_push_notification"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqUu6kRLZiJOsFDeT7chihScGkLVPmlwI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
