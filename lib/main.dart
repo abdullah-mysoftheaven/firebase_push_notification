@@ -78,6 +78,11 @@ class _MyHomePageState extends State<MyHomePage> {
     firebaseMessaging.bodyCtlr.stream.listen(_changeBody);
     firebaseMessaging.titleCtlr.stream.listen(_changeTitle);
 
+
+    //data fetch
+    _scrollController = ScrollController()..addListener(_scrollListener);
+    _fetchData();
+
   }
 
   // Function to initialize Firebase and get Firestore instance
@@ -103,94 +108,167 @@ class _MyHomePageState extends State<MyHomePage> {
 
         title: Text(widget.title),
       ),
-      body:StreamBuilder<QuerySnapshot>(
-        stream: fetchDataFromFirestore(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('Error: ${snapshot.error}'),
-            );
-          }
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-
-          // If data is available, display it in a ListView
-          final data = snapshot.data!;
-
-          // print(">>>>>>>>>>>>>>>>>${data.docs}<<<<<<<<<<<<<<<<<<<");
-          return ListView.builder(
-            itemCount: data.docs.length,
-            itemBuilder: (context, index) {
-              // Access each document in the snapshot
-              final document = data.docs[index];
-              // You can access specific fields using document.data()['field_name']
-
-              final countryData = document.data() as Map<String, dynamic>?;
-              // Check if countryData is not null and 'name' field exists
-              final imageLinkId = countryData?['imageLink'] ?? '';
-              final name = countryData?['name'] ?? '';
+      body:
+      ListView.builder(
+        controller: _scrollController,
+        itemCount: _documents.length + (_isLoading ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index < _documents.length) {
+            final document = _documents[index];
 
 
-              final documentId = document.id;
+            final countryData = document.data() as Map<String, dynamic>?;
+            // Check if countryData is not null and 'name' field exists
+            final imageLinkId = countryData?['imageLink'].toString() ?? '';
+            print(imageLinkId);
+            final name = countryData?['name'] ?? '';
 
 
-              return Row(
-                children: [
-                  Expanded(child: Container(
-                    margin: EdgeInsets.only(left: 10,right: 10,top: 10,bottom: 10),
-
-                    height: 150,
-                    // width: 150,
-
-                    child:Column(
-                      children: [
-                        Expanded(child: Row(
-                          children: [
-                            Expanded(child: InkWell(
-                              onTap: (){
-                                updateDataInFirestore(documentId);
-                              },
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: FadeInImage.assetNetwork(
-                                  fit: BoxFit.fill,
-                                  placeholder: Assets.loadingImage,
+            // final documentId = document.id;
 
 
-                                  // image:"https://drive.google.com/uc?export=view&id=1VxXLQglhtZHR7_xIUToZIXhA10yxRzWf",
-                                  image:"https://drive.google.com/uc?export=view&id=$imageLinkId",
+            return Row(
+              children: [
+                Expanded(child: Container(
+                  margin: EdgeInsets.only(left: 10,right: 10,top: 10,bottom: 10),
 
-                                  imageErrorBuilder: (context, url, error) =>
-                                      Image.asset(
-                                        Assets.emptyImage,
-                                        fit: BoxFit.fill,
-                                      ),
-                                ),
+                  height: 150,
+                  // width: 150,
+
+                  child:Column(
+                    children: [
+                      Expanded(child: Row(
+                        children: [
+                          Expanded(child: InkWell(
+                            onTap: (){
+                              // updateDataInFirestore(documentId);
+                            },
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: FadeInImage.assetNetwork(
+                                fit: BoxFit.fill,
+                                placeholder: Assets.loadingImage,
+
+
+                                // image:"https://drive.google.com/uc?export=view&id=1VxXLQglhtZHR7_xIUToZIXhA10yxRzWf",
+                                image:"https://drive.google.com/uc?export=view&id=$imageLinkId",
+
+                                imageErrorBuilder: (context, url, error) =>
+
+                                    Image.asset(
+                                      Assets.emptyImage,
+                                      fit: BoxFit.fill,
+                                    ),
                               ),
-                            ))
-                          ],
-                        )),
-                        Text(name)
+                            ),
+                          ))
+                        ],
+                      )),
+                      Text(name)
 
-                      ],
-                    ),
-                  ))
-                ],
-              );
-
-
-                ListTile(
-                title: Text(imageLinkId),
-                // subtitle: Text(document.data()['description']),
-              );
-            },
-          );
+                    ],
+                  ),
+                ))
+              ],
+            );
+          } else {
+            return Padding(
+              padding: EdgeInsets.symmetric(vertical: 16.0),
+              child: Center(child: CircularProgressIndicator()),
+            );
+          }
         },
       ),
+
+      //this is for all data fetch
+      // StreamBuilder<QuerySnapshot>(
+      //   stream: fetchDataFromFirestore(),
+      //   builder: (context, snapshot) {
+      //     if (snapshot.hasError) {
+      //       return Center(
+      //         child: Text('Error: ${snapshot.error}'),
+      //       );
+      //     }
+      //
+      //     if (snapshot.connectionState == ConnectionState.waiting) {
+      //       return Center(
+      //         child: CircularProgressIndicator(),
+      //       );
+      //     }
+      //
+      //     // If data is available, display it in a ListView
+      //     final data = snapshot.data!;
+      //
+      //     // print(">>>>>>>>>>>>>>>>>${data.docs}<<<<<<<<<<<<<<<<<<<");
+      //     return ListView.builder(
+      //       itemCount: data.docs.length,
+      //       itemBuilder: (context, index) {
+      //         // Access each document in the snapshot
+      //         final document = data.docs[index];
+      //         // You can access specific fields using document.data()['field_name']
+      //
+      //         final countryData = document.data() as Map<String, dynamic>?;
+      //         // Check if countryData is not null and 'name' field exists
+      //         final imageLinkId = countryData?['imageLink'] ?? '';
+      //         final name = countryData?['name'] ?? '';
+      //
+      //
+      //         final documentId = document.id;
+      //
+      //
+      //         return Row(
+      //           children: [
+      //             Expanded(child: Container(
+      //               margin: EdgeInsets.only(left: 10,right: 10,top: 10,bottom: 10),
+      //
+      //               height: 150,
+      //               // width: 150,
+      //
+      //               child:Column(
+      //                 children: [
+      //                   Expanded(child: Row(
+      //                     children: [
+      //                       Expanded(child: InkWell(
+      //                         onTap: (){
+      //                           updateDataInFirestore(documentId);
+      //                         },
+      //                         child: ClipRRect(
+      //                           borderRadius: BorderRadius.circular(10),
+      //                           child: FadeInImage.assetNetwork(
+      //                             fit: BoxFit.fill,
+      //                             placeholder: Assets.loadingImage,
+      //
+      //
+      //                             // image:"https://drive.google.com/uc?export=view&id=1VxXLQglhtZHR7_xIUToZIXhA10yxRzWf",
+      //                             image:"https://drive.google.com/uc?export=view&id=$imageLinkId",
+      //
+      //                             imageErrorBuilder: (context, url, error) =>
+      //                                 Image.asset(
+      //                                   Assets.emptyImage,
+      //                                   fit: BoxFit.fill,
+      //                                 ),
+      //                           ),
+      //                         ),
+      //                       ))
+      //                     ],
+      //                   )),
+      //                   Text(name)
+      //
+      //                 ],
+      //               ),
+      //             ))
+      //           ],
+      //         );
+      //
+      //
+      //           ListTile(
+      //           title: Text(imageLinkId),
+      //           // subtitle: Text(document.data()['description']),
+      //         );
+      //       },
+      //     );
+      //   },
+      // ),
       floatingActionButton: FloatingActionButton(
         onPressed:(){
           addDataToFirestore();
@@ -222,7 +300,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
   // Function to update data in a specific document in Firestore
-  Future<void> updateDataInFirestore(String documentId) async {
+  Future<void> updateDataInFirestore1(String documentId) async {
     try {
       await getFirestoreInstance().collection('ImageList').doc(documentId).update({
         'imageLink': '1VxXLQglhtZHR7_xIUToZIXhA10yxRzWf',
@@ -232,6 +310,64 @@ class _MyHomePageState extends State<MyHomePage> {
       print('Data updated successfully!');
     } catch (e) {
       print('Error updating data: $e');
+    }
+  }
+
+
+
+  //pagination
+
+  final int _limit = 10; // Number of documents to fetch per page
+  DocumentSnapshot? _lastDocument;
+  late ScrollController _scrollController;
+  late List<DocumentSnapshot> _documents = [];
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchData() async {
+    if (!_isLoading) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      QuerySnapshot querySnapshot;
+      if (_lastDocument == null) {
+        querySnapshot = await FirebaseFirestore.instance
+            .collection('ImageList')
+            .orderBy('imageLink') // Replace 'field' with your sorting field
+            .limit(_limit)
+            .get();
+      } else {
+        querySnapshot = await FirebaseFirestore.instance
+            .collection('ImageList')
+            .orderBy('imageLink') // Replace 'field' with your sorting field
+            .startAfterDocument(_lastDocument!)
+            .limit(_limit)
+            .get();
+      }
+
+      if (querySnapshot.docs.isNotEmpty) {
+        setState(() {
+          _isLoading = false;
+          _documents.addAll(querySnapshot.docs);
+          _lastDocument = querySnapshot.docs.last;
+        });
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _scrollListener() {
+    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
+      _fetchData();
     }
   }
 
