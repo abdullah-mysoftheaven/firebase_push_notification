@@ -13,14 +13,14 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
 
-        
+
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
@@ -63,7 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void initState() {
-    print('vumiseba app initState');
+    print('my app initState');
     WidgetsFlutterBinding.ensureInitialized();
     // configLoading();
 
@@ -86,8 +86,8 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
 
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        
-        
+
+
         title: Text(widget.title),
       ),
       body: const Center(
@@ -105,7 +105,7 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed:(){},
         tooltip: 'Increment',
         child: const Icon(Icons.add),
-      ), 
+      ),
     );
   }
 }
