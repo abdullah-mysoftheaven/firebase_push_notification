@@ -1,8 +1,11 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_push_notification/utils/assets.dart';
 import 'package:flutter/material.dart';
 
 import 'FCM.dart';
 import 'messaging_service/notification_services.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -77,6 +80,16 @@ class _MyHomePageState extends State<MyHomePage> {
 
   }
 
+  // Function to initialize Firebase and get Firestore instance
+  FirebaseFirestore getFirestoreInstance() {
+    return FirebaseFirestore.instance;
+  }
+
+  // Function to fetch data from Firestore
+  Stream<QuerySnapshot> fetchDataFromFirestore() {
+    return getFirestoreInstance().collection('ImageList').snapshots();
+  }
+
   @override
   Widget build(BuildContext context) {
     NotificationServices notificationServices = NotificationServices();
@@ -90,24 +103,139 @@ class _MyHomePageState extends State<MyHomePage> {
 
         title: Text(widget.title),
       ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'Flutter Firebase project',
-            ),
+      body:StreamBuilder<QuerySnapshot>(
+        stream: fetchDataFromFirestore(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Text('Error: ${snapshot.error}'),
+            );
+          }
 
-          ],
-        ),
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          // If data is available, display it in a ListView
+          final data = snapshot.data!;
+
+          // print(">>>>>>>>>>>>>>>>>${data.docs}<<<<<<<<<<<<<<<<<<<");
+          return ListView.builder(
+            itemCount: data.docs.length,
+            itemBuilder: (context, index) {
+              // Access each document in the snapshot
+              final document = data.docs[index];
+              // You can access specific fields using document.data()['field_name']
+
+              final countryData = document.data() as Map<String, dynamic>?;
+              // Check if countryData is not null and 'name' field exists
+              final imageLinkId = countryData?['imageLink'] ?? '';
+              final name = countryData?['name'] ?? '';
+
+
+              final documentId = document.id;
+
+
+              return Row(
+                children: [
+                  Expanded(child: Container(
+                    margin: EdgeInsets.only(left: 10,right: 10,top: 10,bottom: 10),
+
+                    height: 150,
+                    // width: 150,
+
+                    child:Column(
+                      children: [
+                        Expanded(child: Row(
+                          children: [
+                            Expanded(child: InkWell(
+                              onTap: (){
+                                updateDataInFirestore(documentId);
+                              },
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: FadeInImage.assetNetwork(
+                                  fit: BoxFit.fill,
+                                  placeholder: Assets.loadingImage,
+
+
+                                  // image:"https://drive.google.com/uc?export=view&id=1VxXLQglhtZHR7_xIUToZIXhA10yxRzWf",
+                                  image:"https://drive.google.com/uc?export=view&id=$imageLinkId",
+
+                                  imageErrorBuilder: (context, url, error) =>
+                                      Image.asset(
+                                        Assets.emptyImage,
+                                        fit: BoxFit.fill,
+                                      ),
+                                ),
+                              ),
+                            ))
+                          ],
+                        )),
+                        Text(name)
+
+                      ],
+                    ),
+                  ))
+                ],
+              );
+
+
+                ListTile(
+                title: Text(imageLinkId),
+                // subtitle: Text(document.data()['description']),
+              );
+            },
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed:(){},
+        onPressed:(){
+          addDataToFirestore();
+        },
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ),
     );
   }
+
+
+
+
+  // Inside FirestoreExample class
+// Function to add data to a collection in Firestore with an auto-generated document ID
+  Future<void> addDataToFirestore() async {
+    try {
+      await getFirestoreInstance().collection('ImageList').add({
+        'imageLink': '1VxXLQglhtZHR7_xIUToZIXhA10yxRzWf',
+        'name': 'value2',
+        // Add more fields as needed
+      });
+      print('Data added successfully!');
+    } catch (e) {
+      print('Error adding data: $e');
+    }
+  }
+
+
+
+  // Function to update data in a specific document in Firestore
+  Future<void> updateDataInFirestore(String documentId) async {
+    try {
+      await getFirestoreInstance().collection('ImageList').doc(documentId).update({
+        'imageLink': '1VxXLQglhtZHR7_xIUToZIXhA10yxRzWf',
+        'name': 'Flower',
+        // Add more fields to update as needed
+      });
+      print('Data updated successfully!');
+    } catch (e) {
+      print('Error updating data: $e');
+    }
+  }
+
+
 }
 
 
